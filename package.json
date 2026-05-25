@@ -1,22 +1,41 @@
 {
   "name": "prisma-js-defaults",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+  "description": "Zero-dependency Prisma extension to generate default values using custom JavaScript functions.",
+  "main": "dist/extension.js",
+  "types": "dist/extension.d.ts",
+  "bin": {
+    "prisma-js-defaults": "dist/index.js"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs",
+  "scripts": {
+    "build": "tsc",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "prisma",
+    "prisma-extension",
+    "default",
+    "generator",
+    "orm",
+    "database"
+  ],
+  "author": "Daniil Didenko <hokaitwin@gmail.com> (https://github.com/HokaigoTwin)",
+  "license": "MIT",
+  "files": [
+    "dist"
+  ],
+  "peerDependencies": {
+    "@prisma/client": ">=4.0.0",
+    "prisma": ">=4.0.0"
+  },
   "devDependencies": {
+    "@prisma/adapter-pg": "^7.8.0",
+    "@prisma/client": "^7.8.0",
     "@types/node": "^25.9.1",
+    "@types/pg": "^8.20.0",
+    "pg": "^8.21.0",
+    "prisma": "^7.8.0",
     "tsx": "^4.22.3",
     "typescript": "^6.0.3"
-  },
-  "dependencies": {
-    "@prisma/client": "^7.8.0",
-    "prisma": "^7.8.0"
   }
 }
