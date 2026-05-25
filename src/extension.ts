@@ -37,7 +37,7 @@ export const withJsDefaults = (functions: Record<string, () => any>) => {
         return dataObj;
     }
 
-    const applyDefaultsToArray = async(model: string, args: any){
+    const applyDefaultsToArray = async(model: string, args: any) => {
         if(args?.data && Array.isArray(args.data)){
             args.data = await Promise.all(
                 args.data.map((item: any)=> applyDefaultsToObj(model, item))
@@ -58,7 +58,7 @@ export const withJsDefaults = (functions: Record<string, () => any>) => {
                     return query(args);
                 },
 
-                async createManyAndReturn({ model, args, query }){
+                async createMany({ model, args, query }){
                     args = await applyDefaultsToArray(model, args);
                     return query(args);
                 },
