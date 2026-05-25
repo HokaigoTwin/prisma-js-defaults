@@ -20,7 +20,7 @@ export const withJsDefaults = (functions: Record<string, () => any>) => {
                 async create({ model, args, query }) {
                     const modelConfig = defaultJsConfig[model];
 
-                    if (modelConfig && args.data) {
+                    if (modelConfig && args?.data) {
                         for (const [field, funcName] of Object.entries(modelConfig)) {
                             
                             if (args.data[field as keyof typeof args.data] === undefined) {

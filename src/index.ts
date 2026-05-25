@@ -13,13 +13,15 @@ try {
     let pendingFunction: string | null = null;
     const defaultJsConfig: Record<string, Record<string, string>> = {};
 
-    lines.forEach(line => {
+    lines.forEach((line: string) => {
         const trimmedLine = line.trim();
 
         const modelMatch = trimmedLine.match(/^model\s+([a-zA-Z0-9_]+)\s*\{/);
         if (modelMatch) {
             currentModel = modelMatch[1];
-            defaultJsConfig[currentModel] = {};
+            if (!defaultJsConfig[currentModel]) {
+                defaultJsConfig[currentModel] = {};
+            }
             return;
         }
 
@@ -36,11 +38,13 @@ try {
                 return;
             }
 
-            if (pendingFunction && trimmedLine.length > 0 && !trimmedLine.startsWith('//')) {
+            if (pendingFunction && trimmedLine.length > 0 && !trimmedLine.startsWith('///')) {
                 const fieldMatch = trimmedLine.match(/^([a-zA-Z0-9_]+)\s+[a-zA-Z0-9_]+/);
                 if (fieldMatch) {
                     const fieldName = fieldMatch[1];
-                    defaultJsConfig[currentModel][fieldName] = pendingFunction;
+                    if (currentModel) {
+                        defaultJsConfig[currentModel][fieldName] = pendingFunction;
+                    }
                     pendingFunction = null;
                 }
             }
