@@ -9,5 +9,5 @@ datasource db {
 model Article {
   id Int @id @default(autoincrement())
   title String
-  slug String 
+  slug String @defaultJs(generateSlug)
 }
