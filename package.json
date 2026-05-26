@@ -1,6 +1,6 @@
 {
   "name": "prisma-js-defaults",
-  "version": "1.1.0",
+  "version": "2.0.0",
   "description": "Zero-dependency Prisma extension to generate default values using custom JavaScript functions.",
   "main": "dist/extension.js",
   "types": "dist/extension.d.ts",
@@ -37,5 +37,8 @@
     "prisma": "^7.8.0",
     "tsx": "^4.22.3",
     "typescript": "^6.0.3"
+  },
+  "dependencies": {
+    "@prisma/internals": "^7.8.0"
   }
 }

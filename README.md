@@ -86,6 +86,13 @@ main()
 2. The Prisma extension hooks into the `$allModels.create` operation.
 3. If a field has a mapped function and was NOT provided in the `create` query, the extension executes your JavaScript function and injects the result before saving to the database.
 
+## Roadmap & Known Limitations (v1.0.0)
+
+This package is currently under active development. Please keep the following in mind for the `v1.0.0` release:
+* **Supported operations:** Currently, only standard `create` operations are supported. 
+* **Coming soon:** Support for `createMany`, `upsert`, and complex **nested writes** is planned for upcoming releases.
+* **TypeScript constraints:** You might need to mark your dynamically generated fields as optional in your `schema.prisma` (e.g., `slug String?`) or use `// @ts-ignore` to prevent TypeScript from complaining about missing fields during creation.
+
 ## License
 
 MIT

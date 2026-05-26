@@ -6,10 +6,36 @@ datasource db {
   provider = "postgresql"
 }
 
+model User {
+  id Int @id @default(autoincrement())
+  name String
+
+  /// @defaultJs(generateHash)
+  hash String @default("")
+
+  articles Article[]
+}
+
 model Article {
-  id    Int    @id @default(autoincrement())
+  id Int @id @default(autoincrement())
   title String
   
   /// @defaultJs(generateSlug)
-  slug  String
+  slug String @default("")
+
+  authorId Int 
+  author User @relation(fields: [authorId], references: [id])
+  
+  comments Comment[]
+}
+
+model Comment {
+  id Int @id @default(autoincrement())
+  text String
+  
+  /// @defaultJs(generateCommentId)
+  publicId String @default("")
+
+  articleId Int
+  article Article  @relation(fields: [articleId], references: [id])
 }
