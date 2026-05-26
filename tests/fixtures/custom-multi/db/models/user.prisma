@@ -1,0 +1,11 @@
+model CustomMultiUser {
+  id Int @id @default(autoincrement())
+  /// @defaultJs(generateMultiUser)
+  name String @default("")
+}
+
+model UserProfile {
+  id Int @id @default(autoincrement())
+  /// @defaultJs(generateBio)
+  bio String @default("")
+}

@@ -9,7 +9,8 @@
   },
   "scripts": {
     "build": "tsc",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "test": "npx tsx src/index.ts && vitest run --fileParallelism false"
   },
   "keywords": [
     "prisma",
@@ -36,7 +37,8 @@
     "pg": "^8.21.0",
     "prisma": "^7.8.0",
     "tsx": "^4.22.3",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.7"
   },
   "dependencies": {
     "@prisma/internals": "^7.8.0"

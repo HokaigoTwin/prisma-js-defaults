@@ -1,0 +1,13 @@
+generator client {
+    provider = "prisma-client-js" 
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model CustomModel {
+  id Int @id @default(autoincrement())
+  /// @defaultJs(generateCustom)
+  customField String @default("")
+}

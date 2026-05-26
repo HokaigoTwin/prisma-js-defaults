@@ -1,0 +1,13 @@
+generator client {
+    provider = "prisma-client-js"
+}   
+
+datasource db {
+  provider = "postgresql"
+}
+
+model ClassicUser {
+    id Int @id @default(autoincrement())
+    ///@defaultJs(generateClassic)
+    testField String @default("")
+}
