@@ -7,8 +7,22 @@ export interface ConfigFormat {
 
 export type TypedConfig<T extends string> = ConfigFormat & { _phantom?: T };
 
-export const withJsDefaults = <T extends string>(config: TypedConfig<T>, functions: Record<T, () => any>) => {
-    const applyDefaultsToObj = async(model: string, dataObj: any): Promise<any> => {
+const deepClone = <T>(obj: T): T =>{
+    if(obj === null || typeof obj !== "object") return obj;
+    if(obj instanceof Date) return new Date(obj.getTime()) as any;
+    if(Array.isArray(obj)) return obj.map(item => deepClone(item)) as any;
+
+    const clonedObj = {} as any;
+    for(const key in obj){
+        if (Object.prototype.hasOwnProperty.call(obj, key)) {
+            clonedObj[key] = deepClone(obj[key]);
+        }
+    }
+    return clonedObj;
+}
+
+export const withJsDefaults = <T extends string>(config: TypedConfig<T>, functions: Record<T, (data?: any) => any>) => {
+        const applyDefaultsToObj = async(model: string, dataObj: any): Promise<any> => {
         if(!dataObj || typeof dataObj !== 'object') return dataObj;
 
         const modelConfig = config.models[model];
@@ -19,7 +33,7 @@ export const withJsDefaults = <T extends string>(config: TypedConfig<T>, functio
                 if (dataObj[field] === undefined) {
                     const generatorFn = functions[funcName as T];
                     if (generatorFn) {
-                        dataObj[field] = await generatorFn();
+                        dataObj[field] = await generatorFn(dataObj);
                     } else {
                         console.warn(`[prisma-js-defaults] WARN: Function "${funcName}" was not provided for field "${field}" on model "${model}".`);
                     }
@@ -86,27 +100,31 @@ export const withJsDefaults = <T extends string>(config: TypedConfig<T>, functio
         query: {
             $allModels: {
                 async create({ model, args, query }) {
-                    if (args?.data) {
-                        args.data = await applyDefaultsToObj(model, args.data);
+                    const safeArgs = deepClone(args);
+                    if (safeArgs?.data) {
+                        safeArgs.data = await applyDefaultsToObj(model, safeArgs.data);
                     }
-                    return query(args);
+                    return query(safeArgs);
                 },
 
                 async createMany({ model, args, query }){
-                    args = await applyDefaultsToArray(model, args);
-                    return query(args);
+                    const safeArgs = deepClone(args);
+                    await applyDefaultsToArray(model, safeArgs);
+                    return query(safeArgs);
                 },
 
                 async createManyAndReturn({model, args, query}){
-                    args = await applyDefaultsToArray(model, args);
-                    return query(args);
+                    const safeArgs = deepClone(args);
+                    await applyDefaultsToArray(model, safeArgs);
+                    return query(safeArgs);
                 },
 
                 async upsert({model, args, query}){
-                    if(args?.create){
-                        args.create = await applyDefaultsToObj(model, args.create);
+                    const safeArgs = deepClone(args);
+                    if(safeArgs?.create){
+                        safeArgs.create = await applyDefaultsToObj(model, safeArgs.create);
                     }
-                    return query(args);
+                    return query(safeArgs);
                 }
             }
         }

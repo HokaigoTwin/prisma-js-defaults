@@ -24,7 +24,8 @@ const mockConfig = {
 const prisma = new PrismaClient({ adapter }).$extends(
     withJsDefaults(mockConfig, {
         generateHash: () => "TEST_HASH_" + Math.floor(Math.random() * 10000),
-        generateSlug: () => "test-slug-" + Math.floor(Math.random() * 10000),
+        generateSlug: (data) => data?.title ? `dynamic-slug-for-${data.title.replace(' ', '-').toLowerCase()}` 
+        : "fallback-slug-" + Math.floor(Math.random() * 10000),
         generateCommentId: () => "CMD-" + Math.random().toString(36).substring(7).toUpperCase()
     })
 );
@@ -67,7 +68,7 @@ describe('Prisma JS Defaults Extension (Runtime on Real DB)', () => {
 
         expect(newUser.articles).toHaveLength(1);
         expect(newUser.articles[0].slug).toBeDefined();
-        expect(newUser.articles[0].slug).toMatch(/^test-slug-/);
+        expect(newUser.articles[0].slug).toBe('dynamic-slug-for-deep-testing');
 
         expect(newUser.articles[0].comments).toHaveLength(2);
         expect(newUser.articles[0].comments[0].publicId).toMatch(/^CMD-/);
@@ -116,5 +117,15 @@ describe('Prisma JS Defaults Extension (Runtime on Real DB)', () => {
         expect(upsertedUser.name).toBe("Upsert User");
         expect(upsertedUser.hash).toBeDefined();
         expect(upsertedUser.hash).toMatch(/^TEST_HASH_/);
+    });
+
+    it('should not mutate the original input object (Pure Function check)', async () => {
+        const inputData = { name: "Immutable User" }; 
+        
+        await (prisma as any).user.create({
+            data: inputData 
+        });
+
+        expect(inputData).not.toHaveProperty('hash');
     });
 });
