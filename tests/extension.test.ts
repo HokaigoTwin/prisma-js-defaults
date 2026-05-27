@@ -19,7 +19,7 @@ const mockConfig = {
         Article: { author: 'User', comments: 'Comment' },
         Comment: { article: 'Article' }
     }
-};
+} as any;
 
 const prisma = new PrismaClient({ adapter }).$extends(
     withJsDefaults(mockConfig, {

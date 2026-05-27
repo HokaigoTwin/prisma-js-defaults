@@ -71,6 +71,8 @@ async function main() {
             relations: {} as Record<string, Record<string, string>>
         };
 
+        const functionNames = new Set<string>();
+
         dmmf.datamodel.models.forEach((model) => {
             const modelName = model.name;
 
@@ -80,6 +82,8 @@ async function main() {
                     if (match) {
                         if (!config.models[modelName]) config.models[modelName] = {};
                         config.models[modelName][field.name] = match[1];
+
+                        functionNames.add(match[1]);
                     }
                 }
 
@@ -98,18 +102,26 @@ async function main() {
 
         const jsPath = path.join(configDir, "index.js");
         const jsContent = `
-            const jsDefaultsConfig = ${configJson};
-            module.exports = { jsDefaultsConfig };
+const jsDefaultsConfig = ${configJson};
+module.exports = { jsDefaultsConfig };
         `;
 
         fs.writeFileSync(jsPath, jsContent, 'utf-8');
 
+        const funcUnion = functionNames.size > 0 ? Array.from(functionNames).map(name => `"${name}"`).join(" | ") : "string";
+
         const dtsPath = path.join(configDir, "index.d.ts");
         const dtsContent = `
-            export declare const jsDefaultsConfig: {
-                models: Record<string, Record<string, string>>;
-                relations: Record<string, Record<string, string>>;
-            };
+export interface ConfigFormat {
+    models: Record<string, Record<string, string>>;
+    relations: Record<string, Record<string, string>>;
+}
+
+export type TypedConfig<T extends string> = ConfigFormat & { _phantom?: T };
+            
+export type RequiredFunctions = ${funcUnion};
+            
+export declare const jsDefaultsConfig: TypedConfig<RequiredFunctions>;
         `;
 
         fs.writeFileSync(dtsPath, dtsContent, 'utf-8');

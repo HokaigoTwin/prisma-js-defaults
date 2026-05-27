@@ -5,7 +5,9 @@ export interface ConfigFormat {
     relations: Record<string, Record<string, string>>;
 }
 
-export const withJsDefaults = (config: ConfigFormat, functions: Record<string, () => any>) => {
+export type TypedConfig<T extends string> = ConfigFormat & { _phantom?: T };
+
+export const withJsDefaults = <T extends string>(config: TypedConfig<T>, functions: Record<T, () => any>) => {
     const applyDefaultsToObj = async(model: string, dataObj: any): Promise<any> => {
         if(!dataObj || typeof dataObj !== 'object') return dataObj;
 
@@ -15,7 +17,7 @@ export const withJsDefaults = (config: ConfigFormat, functions: Record<string, (
         if (modelConfig) {
             const defaultPromises = Object.entries(modelConfig).map(async ([field, funcName]) => {
                 if (dataObj[field] === undefined) {
-                    const generatorFn = functions[funcName];
+                    const generatorFn = functions[funcName as T];
                     if (generatorFn) {
                         dataObj[field] = await generatorFn();
                     } else {

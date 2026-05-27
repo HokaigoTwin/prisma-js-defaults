@@ -55,6 +55,7 @@ describe('CLI Parser Tests', () => {
         expect(fs.existsSync(generatedDtsPath)).toBe(true);
 
         const jsContent = fs.readFileSync(generatedJsPath, 'utf-8');
+        const dtsContent = fs.readFileSync(generatedDtsPath, 'utf-8');
         
         const jsonMatch = jsContent.match(/const jsDefaultsConfig = (\{[\s\S]*?\});/);
         expect(jsonMatch).not.toBeNull();
@@ -66,6 +67,8 @@ describe('CLI Parser Tests', () => {
         expectations.forEach(({ model, field, gen }) => {
             expect(jsDefaultsConfig.models[model]).toBeDefined();
             expect(jsDefaultsConfig.models[model][field]).toBe(gen);
+            
+            expect(dtsContent).toContain(`"${gen}"`);
         });
     });
 
