@@ -56,10 +56,9 @@ describe('CLI Parser Tests', () => {
 
         const jsContent = fs.readFileSync(generatedJsPath, 'utf-8');
         const dtsContent = fs.readFileSync(generatedDtsPath, 'utf-8');
-        
-        const jsonMatch = jsContent.match(/const jsDefaultsConfig = (\{[\s\S]*?\});/);
-        expect(jsonMatch).not.toBeNull();
 
+        const jsonMatch = jsContent.match(/const rawConfig = (\{[\s\S]*?\});/);
+        expect(jsonMatch).not.toBeNull();
         const jsDefaultsConfig = JSON.parse(jsonMatch![1]);
         
         expect(jsDefaultsConfig).toBeDefined();
@@ -76,6 +75,19 @@ describe('CLI Parser Tests', () => {
         expect(() => {
             runCliParser(FIXTURES.INVALID);
         }).toThrow();
+    });
+
+    it('should generate a config object without a prototype to prevent Prototype Pollution', () => {
+        runCliParser(FIXTURES.CLASSIC);
+        
+        delete require.cache[require.resolve(generatedJsPath)];
+        
+        const { jsDefaultsConfig } = require(generatedJsPath);
+
+        expect(Object.getPrototypeOf(jsDefaultsConfig.models)).toBeNull();
+        expect(Object.getPrototypeOf(jsDefaultsConfig.relations)).toBeNull();
+
+        expect(jsDefaultsConfig.models.__proto__).toBeUndefined();
     });
 
     afterAll(() => {

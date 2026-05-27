@@ -102,7 +102,13 @@ async function main() {
 
         const jsPath = path.join(configDir, "index.js");
         const jsContent = `
-const jsDefaultsConfig = ${configJson};
+const rawConfig = ${configJson};
+
+const jsDefaultsConfig = {
+    models: Object.assign(Object.create(null), rawConfig.models),
+    relations: Object.assign(Object.create(null), rawConfig.relations)
+};
+
 module.exports = { jsDefaultsConfig };
         `;
 

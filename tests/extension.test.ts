@@ -128,4 +128,20 @@ describe('Prisma JS Defaults Extension (Runtime on Real DB)', () => {
 
         expect(inputData).not.toHaveProperty('hash');
     });
+
+    it('should throw an error if a user generator function fails', async () => {
+        const badPrisma = new PrismaClient({ adapter }).$extends(
+            withJsDefaults(mockConfig, {
+                generateHash: () => { 
+                    throw new Error("Bad input");
+                },
+                generateSlug: () => "test-slug",
+                generateCommentId: () => "test-id"
+            })
+        ) as any;
+
+        await expect(
+            badPrisma.user.create({ data: { name: "Crash Test Dummy" } })
+        ).rejects.toThrow(/Error executing your function "generateHash"/);
+    });
 });

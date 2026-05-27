@@ -33,7 +33,11 @@ export const withJsDefaults = <T extends string>(config: TypedConfig<T>, functio
                 if (dataObj[field] === undefined) {
                     const generatorFn = functions[funcName as T];
                     if (generatorFn) {
-                        dataObj[field] = await generatorFn(dataObj);
+                        try{
+                            dataObj[field] = await generatorFn(dataObj);
+                        } catch(error: any){
+                            throw new Error(`\n[prisma-js-defaults] 🚨 Error executing your function "${funcName}" for field "${field}" on model "${model}".\nError details: ${error.message}`);                        
+                        }
                     } else {
                         console.warn(`[prisma-js-defaults] WARN: Function "${funcName}" was not provided for field "${field}" on model "${model}".`);
                     }
