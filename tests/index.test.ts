@@ -3,7 +3,8 @@ import { execSync } from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
 
-const generatedConfigPath = path.join(process.cwd(), 'prisma', 'js-defaults.json');
+const generatedJsPath = path.join(process.cwd(), 'prisma', 'generated', 'js-defaults', 'index.js');
+const generatedDtsPath = path.join(process.cwd(), 'prisma', 'generated', 'js-defaults', 'index.d.ts');
 
 function runCliParser(schemaPath: string) {
     const cmd = `npx tsx src/index.ts --schema=${schemaPath}`;
@@ -47,15 +48,24 @@ const validTestCases = [
 
 describe('CLI Parser Tests', () => {
 
-    it.each(validTestCases)('should successfully parse a $name', ({ targetPath, expectations }) => {
+    it.each(validTestCases)('should successfully parse a $name', async ({ targetPath, expectations }) => {
         runCliParser(targetPath);
+
+        expect(fs.existsSync(generatedJsPath)).toBe(true);
+        expect(fs.existsSync(generatedDtsPath)).toBe(true);
+
+        const jsContent = fs.readFileSync(generatedJsPath, 'utf-8');
         
-        expect(fs.existsSync(generatedConfigPath)).toBe(true);
-        const config = JSON.parse(fs.readFileSync(generatedConfigPath, 'utf-8'));
+        const jsonMatch = jsContent.match(/const jsDefaultsConfig = (\{[\s\S]*?\});/);
+        expect(jsonMatch).not.toBeNull();
+
+        const jsDefaultsConfig = JSON.parse(jsonMatch![1]);
         
+        expect(jsDefaultsConfig).toBeDefined();
+
         expectations.forEach(({ model, field, gen }) => {
-            expect(config.models[model]).toBeDefined();
-            expect(config.models[model][field]).toBe(gen);
+            expect(jsDefaultsConfig.models[model]).toBeDefined();
+            expect(jsDefaultsConfig.models[model][field]).toBe(gen);
         });
     });
 

@@ -8,8 +8,21 @@ import { withJsDefaults } from '../src/extension';
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 const adapter = new PrismaPg(pool);
 
+const mockConfig = {
+    models: {
+        User: { hash: 'generateHash' },
+        Article: { slug: 'generateSlug' },
+        Comment: { publicId: 'generateCommentId' }
+    },
+    relations: {
+        User: { articles: 'Article' },
+        Article: { author: 'User', comments: 'Comment' },
+        Comment: { article: 'Article' }
+    }
+};
+
 const prisma = new PrismaClient({ adapter }).$extends(
-    withJsDefaults({
+    withJsDefaults(mockConfig, {
         generateHash: () => "TEST_HASH_" + Math.floor(Math.random() * 10000),
         generateSlug: () => "test-slug-" + Math.floor(Math.random() * 10000),
         generateCommentId: () => "CMD-" + Math.random().toString(36).substring(7).toUpperCase()

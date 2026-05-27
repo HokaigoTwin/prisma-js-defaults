@@ -90,12 +90,29 @@ async function main() {
             });
         });
 
-        const configDir = path.join(process.cwd(), "prisma");
+        const configDir = path.join(process.cwd(), "prisma", "generated", "js-defaults");
         if (!fs.existsSync(configDir)) {
             fs.mkdirSync(configDir, { recursive: true });
         }
-        const configPath = path.join(configDir, "js-defaults.json");
-        fs.writeFileSync(configPath, JSON.stringify(config, null, 2), 'utf-8');
+        const configJson = JSON.stringify(config, null, 2);
+
+        const jsPath = path.join(configDir, "index.js");
+        const jsContent = `
+            const jsDefaultsConfig = ${configJson};
+            module.exports = { jsDefaultsConfig };
+        `;
+
+        fs.writeFileSync(jsPath, jsContent, 'utf-8');
+
+        const dtsPath = path.join(configDir, "index.d.ts");
+        const dtsContent = `
+            export declare const jsDefaultsConfig: {
+                models: Record<string, Record<string, string>>;
+                relations: Record<string, Record<string, string>>;
+            };
+        `;
+
+        fs.writeFileSync(dtsPath, dtsContent, 'utf-8');
 
         const prismaCommand = customSchemaPath ? `npx prisma generate --schema="${customSchemaPath}"` : 'npx prisma generate';
         execSync(prismaCommand, { stdio: 'inherit' });

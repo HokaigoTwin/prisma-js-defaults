@@ -1,32 +1,16 @@
 import { Prisma } from '@prisma/client';
-import * as fs from 'fs';
-import * as path from 'path';
 
-interface ConfigFormat {
+export interface ConfigFormat {
     models: Record<string, Record<string, string>>;
     relations: Record<string, Record<string, string>>;
 }
 
-const configPath = path.join(process.cwd(), 'prisma', 'js-defaults.json');
-
-let defaultJsConfig: ConfigFormat = {
-    models: {},
-    relations: {},
-}
-
-try {
-    const rawConfig = fs.readFileSync(configPath, 'utf-8');
-    defaultJsConfig = JSON.parse(rawConfig);
-} catch (e) {
-    console.warn('[prisma-js-defaults] WARN: js-defaults.json not found. Did you run `npx prisma-js-defaults`?');
-}
-
-export const withJsDefaults = (functions: Record<string, () => any>) => {
+export const withJsDefaults = (config: ConfigFormat, functions: Record<string, () => any>) => {
     const applyDefaultsToObj = async(model: string, dataObj: any): Promise<any> => {
         if(!dataObj || typeof dataObj !== 'object') return dataObj;
 
-        const modelConfig = defaultJsConfig.models[model];
-        const modelRelations = defaultJsConfig.relations[model];
+        const modelConfig = config.models[model];
+        const modelRelations = config.relations[model];
 
         if (modelConfig) {
             const defaultPromises = Object.entries(modelConfig).map(async ([field, funcName]) => {

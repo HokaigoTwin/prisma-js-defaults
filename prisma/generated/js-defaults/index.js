@@ -1,4 +1,5 @@
-{
+
+            const jsDefaultsConfig = {
   "models": {
     "User": {
       "hash": "generateHash"
@@ -22,4 +23,6 @@
       "article": "Article"
     }
   }
-}
+};
+            module.exports = { jsDefaultsConfig };
+        

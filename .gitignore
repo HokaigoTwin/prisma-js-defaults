@@ -26,3 +26,6 @@ build/
 
 .DS_Store
 Thumbs.db
+
+prisma/js-defaults.js
+prisma/js-defaults.d.ts
