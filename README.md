@@ -1,5 +1,9 @@
 # prisma-js-defaults
 
+[![npm version](https://img.shields.io/npm/v/prisma-js-defaults.svg?style=flat-square)](https://www.npmjs.com/package/prisma-js-defaults)
+[![npm downloads](https://img.shields.io/npm/dt/prisma-js-defaults.svg?style=flat-square)](https://www.npmjs.com/package/prisma-js-defaults)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](https://opensource.org/licenses/MIT)
+
 A zero-dependency, context-aware Prisma extension that allows you to use custom JavaScript/TypeScript functions to generate default values for your database fields dynamically at runtime.
 
 ## What's new in v2.1.0? (Stability & Deep Cloning Update)
