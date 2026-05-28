@@ -2,29 +2,18 @@
 
 A zero-dependency, context-aware Prisma extension that allows you to use custom JavaScript/TypeScript functions to generate default values for your database fields dynamically at runtime.
 
-## What's new in v2.0.0? (Major Architecture Overhaul)
+## What's new in v2.1.0? (Stability & Deep Cloning Update)
 
-Version 2.0.0 is a complete rewrite focused on enterprise-grade stability, developer experience (DX), and performance.
+Version 2.1.0 brings massive improvements to runtime safety, memory management, and complete support for complex Prisma data types and nested update trees.
 
-### Core Engine & Parsing
-* **AST-Based Parsing:** Replaced fragile RegEx parsing with Prisma's internal `getDMMF`. The parser now perfectly handles complex formatting, comments, and empty lines without breaking.
-* **Multi-file Schema Support:** Automatically traverses and recursively merges all `.prisma` files in custom or default directory structures.
-* **Edge Runtime & Monorepo Compatibility:** Completely removed runtime `fs.readFileSync` calls. The extension now relies entirely on a pre-generated static configuration, eliminating hot-reloading crashes and Edge environment blockers.
+### Smarter & Hardened deepClone
+* **Prisma Ecosystem Types:** Fixed bugs where specialized Prisma fields would lose their instances during query arguments cloning. Now fully supports `Prisma.Decimal`, `Prisma.DbNull`, `Prisma.JsonNull`, and `Prisma.AnyNull` without breaking their internal structures.
+* **Native Type Support:** Added seamless deep cloning for JavaScript `Date` and Node.js `Buffer` objects.
+* **Circular Reference Protection:** Upgraded the cloning engine with a `WeakMap` registry. If your query payload contains circular references, the extension safely handles them instead of throwing a `RangeError: Maximum call stack size exceeded` crash.
 
-### Developer Experience (DX) & Type Safety
-* **Strict Autocomplete:** Automatically generates exact TypeScript union types for your required generator functions. No more "blind" typing—your IDE will catch missing or misspelled function names at compile time.
-* **Contextual Generators:** Generator functions now receive the current `data` object payload as an argument, enabling derived defaults (e.g., dynamically generating a `slug` based on a provided `title`).
-* **Friendly Error Tracing:** User-provided functions are now wrapped in isolated `try/catch` blocks. If your custom logic fails, the extension throws a clear, developer-readable error instead of an obscure database crash.
-
-### Runtime Stability & Security
-* **Zero Side-Effects (Immutability):** Implemented strict deep cloning (`deepClone`) to guarantee that your original input objects are never mutated during traversal.
-* **Hardened Security:** Secured the internal configuration dictionaries against Prototype Pollution vulnerabilities by utilizing prototype-less objects (`Object.create(null)`).
-* **Safe Traversal:** Added robust runtime checks (`if (args?.data)`, `if (!dataObj)`) to completely prevent `Cannot read properties of undefined` crashes during malformed or empty queries.
-
-### Expanded Database Operations
-* **Parallel Execution:** Switched to concurrent execution (`Promise.all`) for all generator functions, significantly reducing database query latency when processing multiple defaults.
-* **Deeply Nested Writes:** Full support for deeply nested relational queries (`create`, `createMany`, `connectOrCreate`, and `upsert` within includes).
-* **Batch Operations:** Added full support for `createMany`, `createManyAndReturn`, and `upsert` (applies to the `create` branch).
+### Traversal for Top-Level update Operations
+* **Nested Writes inside Updates:** The extension now intercepts top-level update queries. While it intentionally skips applying defaults to fields being directly `updated` (preserving your data integrity), it now recursively traverses nested relation trees inside the update payload. 
+* This means nested `create`, `createMany`, `connectOrCreate`, or `upsert` queries triggered inside a parent `update` will now correctly receive their dynamic JS defaults.
 
 ## Why this exists?
 
@@ -130,15 +119,32 @@ main()
 * `createManyAndReturn`
 * `upsert` (applies to the `create` branch only)
 * Nested relational writes (`create`, `createMany`, `connectOrCreate`, `upsert` within includes)
+* Nested relation trees inside `update` operations (applies only to nested creations like `create`, `createMany`, `connectOrCreate`, or `upsert.create`).
 
-*Note: `update` operations are intentionally ignored, as defaults should only be applied upon record creation.*
+*Note: Top-level fields inside update actions are never modified, ensuring existing data isn't accidentally overwritten by default values.*
+
+***Interactive Transactions:** Fully supported out of the box. The extension seamlessly handles queries executed inside `$transaction(async (tx) => { ... })` blocks without any additional configuration.*
+
+## Advanced: Async Functions
+Your generator functions can be completely asynchronous! This is incredibly powerful if your default value depends on an external API, database lookup, or heavy cryptographic hashing.
+```typescript
+const prisma = new PrismaClient().$extends(
+    withJsDefaults(jsDefaultsConfig, {
+        generateSlug: async (data) => {
+            // Fetch some external data or hash before inserting!
+            const uniqueHash = await fetchSomeExternalApi();
+            return `${data.title}-${uniqueHash}`;
+        }
+    })
+);
+```
 
 ## Important Architecture Notes
 
 ### 1. Extension Order (Middleware Pipeline)
 Prisma executes extensions in the order they are chained. If you are using multiple extensions that modify `args.data` on queries, the order matters:
-* To ensure your defaults are applied **after** other extensions format the data, place `withJsDefaults` **last** in the chain.
-* To allow other extensions to format or validate the defaults generated by your functions, place `withJsDefaults` **first**.
+* Place `withJsDefaults` **last** if you want it to run after other extensions have formatted your data.
+* Place `withJsDefaults` **first** if you want subsequent extensions to validate or log the defaults generated by your functions.
 
 ### 2. `@defaultJs()` vs native `@default()`
 If a field in your schema has both a Prisma native default and a JS default (e.g., `id String @default(uuid()) /// @defaultJs(myGenerator)`), the **`@defaultJs` will always win**.
