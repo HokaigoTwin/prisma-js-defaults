@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { deepClone } from '../src/utils/deepClone';
+import { Prisma } from '@prisma/client';
 
 describe('deepClone Utility', () => {
 
@@ -78,5 +79,19 @@ describe('deepClone Utility', () => {
         expect(clonedCircular.name).toBe("John");
         expect(clonedCircular.myself).toBe(clonedCircular); 
         expect(clonedCircular).not.toBe(circularObj);
+    });
+
+    it('should return Prisma Null types by reference', () => {        
+        if (Prisma.DbNull) {
+            expect(deepClone(Prisma.DbNull)).toBe(Prisma.DbNull);
+        }
+        
+        if (Prisma.JsonNull) {
+            expect(deepClone(Prisma.JsonNull)).toBe(Prisma.JsonNull);
+        }
+        
+        if (Prisma.AnyNull) {
+            expect(deepClone(Prisma.AnyNull)).toBe(Prisma.AnyNull);
+        }
     });
 });

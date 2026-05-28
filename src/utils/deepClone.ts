@@ -1,3 +1,5 @@
+import { Prisma } from '@prisma/client';
+
 export const deepClone = <T>(obj: T, seen = new WeakMap()): T => {
     if (obj === null || typeof obj !== "object") return obj;
     if (seen.has(obj as object)) return seen.get(obj as object);
@@ -6,6 +8,14 @@ export const deepClone = <T>(obj: T, seen = new WeakMap()): T => {
 
     if (typeof Buffer !== "undefined" && Buffer.isBuffer(obj)) {
         return Buffer.from(obj) as any;
+    }
+
+    if (
+        (Prisma.DbNull && (obj as any) === Prisma.DbNull) ||
+        (Prisma.JsonNull && (obj as any) === Prisma.JsonNull) ||
+        (Prisma.AnyNull && (obj as any) === Prisma.AnyNull)
+    ) {
+        return obj; 
     }
 
     if (

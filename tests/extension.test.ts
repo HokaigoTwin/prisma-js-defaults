@@ -24,7 +24,7 @@ const mockConfig = {
 const prisma = new PrismaClient({ adapter }).$extends(
     withJsDefaults(mockConfig, {
         generateHash: () => "TEST_HASH_" + Math.floor(Math.random() * 10000),
-        generateSlug: (data) => data?.title ? `dynamic-slug-for-${data.title.replace(' ', '-').toLowerCase()}` 
+        generateSlug: (data) => data?.title ? `dynamic-slug-for-${data.title.replaceAll(' ', '-').toLowerCase()}` 
         : "fallback-slug-" + Math.floor(Math.random() * 10000),
         generateCommentId: () => "CMD-" + Math.random().toString(36).substring(7).toUpperCase()
     })
@@ -143,5 +143,32 @@ describe('Prisma JS Defaults Extension (Runtime on Real DB)', () => {
         await expect(
             badPrisma.user.create({ data: { name: "Crash Test Dummy" } })
         ).rejects.toThrow(/Error executing your function "generateHash"/);
+    });
+
+    it('should not apply defaults to top-level update, but should apply to nested creates within update', async () => {
+        const oldUser = await (prisma as any).user.create({
+            data: { name: "Old User" }
+        });
+
+        const updatedUser = await (prisma as any).user.update({
+            where: { id: oldUser.id },
+            data: {
+                name: "Updated Old User",
+                articles: {
+                    create: {
+                        title: "New Nested Article"
+                    }
+                }
+            },
+            include: { articles: true }
+        });
+
+        expect(updatedUser.name).toBe("Updated Old User");
+        
+        expect(updatedUser.hash).toEqual(oldUser.hash);
+
+        expect(updatedUser.articles).toHaveLength(1);
+        expect(updatedUser.articles[0].slug).toBeDefined();
+        expect(updatedUser.articles[0].slug).toBe('dynamic-slug-for-new-nested-article');
     });
 });

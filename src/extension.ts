@@ -9,13 +9,13 @@ export interface ConfigFormat {
 export type TypedConfig<T extends string> = ConfigFormat & { _phantom?: T };
 
 export const withJsDefaults = <T extends string>(config: TypedConfig<T>, functions: Record<T, (data?: any) => any>) => {
-        const applyDefaultsToObj = async(model: string, dataObj: any): Promise<any> => {
+        const applyDefaultsToObj = async(model: string, dataObj: any, isUpdatePayload: boolean = false): Promise<any> => {
         if(!dataObj || typeof dataObj !== 'object') return dataObj;
 
         const modelConfig = config.models[model];
         const modelRelations = config.relations[model];
 
-        if (modelConfig) {
+        if (modelConfig && !isUpdatePayload) {
             const defaultPromises = Object.entries(modelConfig).map(async ([field, funcName]) => {
                 if (dataObj[field] === undefined) {
                     const generatorFn = functions[funcName as T];
@@ -40,32 +40,44 @@ export const withJsDefaults = <T extends string>(config: TypedConfig<T>, functio
                 if (!relationData) return;
 
                 if (relationData.create && !Array.isArray(relationData.create)) {
-                    relationData.create = await applyDefaultsToObj(targetModel, relationData.create);
+                    relationData.create = await applyDefaultsToObj(targetModel, relationData.create, false);
                 }
 
                 if (relationData.create && Array.isArray(relationData.create)) {
                     relationData.create = await Promise.all(
-                        relationData.create.map((item: any) => applyDefaultsToObj(targetModel, item))
+                        relationData.create.map((item: any) => applyDefaultsToObj(targetModel, item, false))
                     );
                 }
 
                 if (relationData.createMany?.data && Array.isArray(relationData.createMany.data)) {
                     relationData.createMany.data = await Promise.all(
-                        relationData.createMany.data.map((item: any) => applyDefaultsToObj(targetModel, item))
+                        relationData.createMany.data.map((item: any) => applyDefaultsToObj(targetModel, item, false))
                     );
                 }
 
                 if (relationData.upsert) {
                     const upserts = Array.isArray(relationData.upsert) ? relationData.upsert : [relationData.upsert];
                     await Promise.all(upserts.map(async (u: any) => {
-                        if (u.create) u.create = await applyDefaultsToObj(targetModel, u.create);
+                        if (u.create) u.create = await applyDefaultsToObj(targetModel, u.create, false);
+                        if (u.update){
+                            const targetData = u.update.data ? u.update.data : u.update;
+                            await applyDefaultsToObj(targetModel, targetData, true);
+                        }
                     }));
                 }
 
                 if (relationData.connectOrCreate) {
                     const connects = Array.isArray(relationData.connectOrCreate) ? relationData.connectOrCreate : [relationData.connectOrCreate];
                     await Promise.all(connects.map(async (c: any) => {
-                        if (c.create) c.create = await applyDefaultsToObj(targetModel, c.create);
+                        if (c.create) c.create = await applyDefaultsToObj(targetModel, c.create, false);
+                    }));
+                }
+
+                if(relationData.update){
+                    const updates = Array.isArray(relationData.update) ? relationData.update : [relationData.update];
+                    await Promise.all(updates.map(async (u: any) => {
+                        const targetData = u.data ? u.data : u;
+                        await applyDefaultsToObj(targetModel, targetData, true);
                     }));
                 }
             });
@@ -93,7 +105,7 @@ export const withJsDefaults = <T extends string>(config: TypedConfig<T>, functio
                 async create({ model, args, query }) {
                     const safeArgs = deepClone(args);
                     if (safeArgs?.data) {
-                        safeArgs.data = await applyDefaultsToObj(model, safeArgs.data);
+                        safeArgs.data = await applyDefaultsToObj(model, safeArgs.data, false);
                     }
                     return query(safeArgs);
                 },
@@ -113,7 +125,18 @@ export const withJsDefaults = <T extends string>(config: TypedConfig<T>, functio
                 async upsert({model, args, query}){
                     const safeArgs = deepClone(args);
                     if(safeArgs?.create){
-                        safeArgs.create = await applyDefaultsToObj(model, safeArgs.create);
+                        safeArgs.create = await applyDefaultsToObj(model, safeArgs.create, false);
+                    }
+                    if(safeArgs?.update){
+                        safeArgs.update = await applyDefaultsToObj(model, safeArgs.update, true);
+                    }
+                    return query(safeArgs);
+                },
+
+                async update({model, args, query}){
+                    const safeArgs = deepClone(args);
+                    if(safeArgs?.data){
+                        safeArgs.data = await applyDefaultsToObj(model, safeArgs.data, true);
                     }
                     return query(safeArgs);
                 }

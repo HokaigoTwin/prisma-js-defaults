@@ -4,6 +4,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 const generatedJsPath = path.join(process.cwd(), 'prisma', 'generated', 'js-defaults', 'index.js');
+const generatedMjsPath = path.join(process.cwd(), 'prisma', 'generated', 'js-defaults', 'index.mjs');
 const generatedDtsPath = path.join(process.cwd(), 'prisma', 'generated', 'js-defaults', 'index.d.ts');
 
 function runCliParser(schemaPath: string) {
@@ -52,6 +53,7 @@ describe('CLI Parser Tests', () => {
         runCliParser(targetPath);
 
         expect(fs.existsSync(generatedJsPath)).toBe(true);
+        expect(fs.existsSync(generatedMjsPath)).toBe(true);
         expect(fs.existsSync(generatedDtsPath)).toBe(true);
 
         const jsContent = fs.readFileSync(generatedJsPath, 'utf-8');

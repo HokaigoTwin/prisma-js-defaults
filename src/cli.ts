@@ -117,6 +117,18 @@ module.exports = { jsDefaultsConfig };
 
         fs.writeFileSync(jsPath, jsContent, 'utf-8');
 
+        const mjsPath = path.join(configDir, "index.mjs");
+        const mjsContent = `
+const rawConfig = ${configJson};
+
+export const jsDefaultsConfig = {
+    models: Object.assign(Object.create(null), rawConfig.models),
+    relations: Object.assign(Object.create(null), rawConfig.relations)
+};
+        `;
+
+        fs.writeFileSync(mjsPath, mjsContent, 'utf-8');
+
         const funcUnion = functionNames.size > 0 ? Array.from(functionNames).map(name => `"${name}"`).join(" | ") : "string";
 
         const dtsPath = path.join(configDir, "index.d.ts");
