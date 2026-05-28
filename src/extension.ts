@@ -1,4 +1,5 @@
 import { Prisma } from '@prisma/client';
+import { deepClone } from './utils/deepClone';
 
 export interface ConfigFormat {
     models: Record<string, Record<string, string>>;
@@ -6,20 +7,6 @@ export interface ConfigFormat {
 }
 
 export type TypedConfig<T extends string> = ConfigFormat & { _phantom?: T };
-
-const deepClone = <T>(obj: T): T =>{
-    if(obj === null || typeof obj !== "object") return obj;
-    if(obj instanceof Date) return new Date(obj.getTime()) as any;
-    if(Array.isArray(obj)) return obj.map(item => deepClone(item)) as any;
-
-    const clonedObj = {} as any;
-    for(const key in obj){
-        if (Object.prototype.hasOwnProperty.call(obj, key)) {
-            clonedObj[key] = deepClone(obj[key]);
-        }
-    }
-    return clonedObj;
-}
 
 export const withJsDefaults = <T extends string>(config: TypedConfig<T>, functions: Record<T, (data?: any) => any>) => {
         const applyDefaultsToObj = async(model: string, dataObj: any): Promise<any> => {
@@ -36,7 +23,7 @@ export const withJsDefaults = <T extends string>(config: TypedConfig<T>, functio
                         try{
                             dataObj[field] = await generatorFn(dataObj);
                         } catch(error: any){
-                            throw new Error(`\n[prisma-js-defaults] 🚨 Error executing your function "${funcName}" for field "${field}" on model "${model}".\nError details: ${error.message}`);                        
+                            throw new Error(`\n[prisma-js-defaults] Error executing your function "${funcName}" for field "${field}" on model "${model}".\nError details: ${error.message}`);                        
                         }
                     } else {
                         console.warn(`[prisma-js-defaults] WARN: Function "${funcName}" was not provided for field "${field}" on model "${model}".`);

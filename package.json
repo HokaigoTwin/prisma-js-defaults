@@ -1,16 +1,16 @@
 {
   "name": "prisma-js-defaults",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "Zero-dependency Prisma extension to generate default values using custom JavaScript functions.",
-  "main": "dist/extension.js",
-  "types": "dist/extension.d.ts",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "bin": {
-    "prisma-js-defaults": "dist/index.js"
+    "prisma-js-defaults": "dist/cli.js"
   },
   "scripts": {
     "build": "tsc",
     "prepublishOnly": "npm run build",
-    "test": "npx tsx src/index.ts && vitest run --fileParallelism false"
+    "test": "npx tsx src/cli.ts && vitest run --fileParallelism false"
   },
   "keywords": [
     "prisma",

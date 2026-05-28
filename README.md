@@ -8,7 +8,7 @@ Version 2.0.0 is a complete rewrite focused on enterprise-grade stability, devel
 
 ### Core Engine & Parsing
 * **AST-Based Parsing:** Replaced fragile RegEx parsing with Prisma's internal `getDMMF`. The parser now perfectly handles complex formatting, comments, and empty lines without breaking.
-* **Multi-file Schema Support (Prisma v7):** Automatically traverses and recursively merges all `.prisma` files in custom or default directory structures.
+* **Multi-file Schema Support:** Automatically traverses and recursively merges all `.prisma` files in custom or default directory structures.
 * **Edge Runtime & Monorepo Compatibility:** Completely removed runtime `fs.readFileSync` calls. The extension now relies entirely on a pre-generated static configuration, eliminating hot-reloading crashes and Edge environment blockers.
 
 ### Developer Experience (DX) & Type Safety

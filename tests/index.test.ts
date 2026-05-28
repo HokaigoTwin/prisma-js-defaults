@@ -7,7 +7,7 @@ const generatedJsPath = path.join(process.cwd(), 'prisma', 'generated', 'js-defa
 const generatedDtsPath = path.join(process.cwd(), 'prisma', 'generated', 'js-defaults', 'index.d.ts');
 
 function runCliParser(schemaPath: string) {
-    const cmd = `npx tsx src/index.ts --schema=${schemaPath}`;
+    const cmd = `npx tsx src/cli.ts --schema=${schemaPath} --skip-generate`;
     execSync(cmd, { stdio: 'ignore' }); 
 }
 
