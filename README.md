@@ -122,7 +122,7 @@ main()
 * `createManyAndReturn`
 * `upsert` (applies to the `create` branch only)
 * Nested relational writes (`create`, `createMany`, `connectOrCreate`, `upsert` within includes)
-* Nested relation trees inside `update` operations (applies only to nested creations like `create`, `createMany`, `connectOrCreate`, or `upsert.create`).
+* Nested relation trees inside `update` operations (applies to nested creations like `create`, `createMany`, `connectOrCreate`, or `upsert.create`).
 
 *Note: Top-level fields inside update actions are never modified, ensuring existing data isn't accidentally overwritten by default values.*
 
